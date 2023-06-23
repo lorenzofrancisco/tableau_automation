@@ -1,0 +1,13 @@
+certifi==2023.5.7
+charset-normalizer==3.1.0
+defusedxml==0.7.1
+dotenv-python==0.0.1
+idna==3.4
+packaging==23.1
+python-dateutil==2.8.2
+requests==2.31.0
+requests-toolbelt==1.0.0
+six==1.16.0
+smartsheet-python-sdk==3.0.2
+tableauserverclient==0.25
+urllib3==1.26.16
