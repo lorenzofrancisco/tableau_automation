@@ -165,7 +165,7 @@ def main():
     password = getpass.getpass("Password: ")
     tableau_auth = TSC.TableauAuth(username, password)
     server = TSC.Server(
-        'http://uhmc-tableau-p.uhmc.sunysb.edu:8000')  # TODO: 443
+        'http://uhmc-tableau-t.uhmc.sunysb.edu:8000')  # 443
     user_data = smartsheet_data()
     # ----------------Tableau Auth-----------------------
     try:

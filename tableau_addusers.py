@@ -2,12 +2,12 @@ import logging  # for logging files
 import sys  # sys.exit() function allows the developer to exit from Python
 import json  # allows for for json
 import argparse  # python for logging levels
-import getpass  # hides all server credentials
 import smartsheet
 import tableauserverclient as TSC  # server client library tableau
 from dotenv import load_dotenv  # loads.env file
 from dotenv import dotenv_values  # loads values from .env file
 
+# TODO: for testing purposes will use dotenv
 load_dotenv()
 config = dotenv_values(".env")
 
@@ -20,8 +20,6 @@ TABLEAU_SERVER_PASSWORD = config['TABLEAU_SERVER_PASSWORD']
 TABLEAU_SERVER_ADDRESS = config['TABLEAU_SERVER_ADDRESS']
 
 # ----------------------User class-----------------------
-
-
 class User:
     def __init__(self, username, site_role, group, row_id, Check):
         self.username = username
@@ -45,31 +43,22 @@ df = json.loads(p)
 
 # TODO: index all necessary values needed from smartsheet
 # contains list comprehension (for loops)
-username = [cells['cells'][0]['displayValue'] for cells in df['rows']]
-site_role = [cells['cells'][3]['displayValue'] for cells in df['rows']]
-group = [cells['cells'][4]['displayValue'] for cells in df['rows']]
-row_id = [cells['id'] for cells in df['rows']]
+username = [cells['cells'][0]['displayValue'] for cells in df['rows'] if cells['cells'][7]['value'] == False]
+site_role = [cells['cells'][3]['displayValue'] for cells in df['rows'] if cells['cells'][7]['value'] == False]
+group = [cells['cells'][4]['displayValue'] for cells in df['rows'] if cells['cells'][7]['value'] == False]
+row_id = [cells['id'] for cells in df['rows'] if cells['cells'][7]['value'] == False]
 Check = []
 for c in df['rows']:
     try:
-        Check.append(c['cells'][7]['value'])
+        if c['cells'][7]['value'] == False:
+            Check.append(c['cells'][7]['value'])
     except Exception as e:
         Check.append(False)
 
 USER = User(username, site_role, group, row_id, Check)
 
-# print(user.username[6], user.Check[6])
+# print(USER.username, USER.site_role, USER.group, USER.row_id, USER.Check)
 # print('----------------------DEBUG----------------------------')
-
-
-# TODO: define a function to return a list of row_id where check is not marked for completion or False
-def grab_unchecked():
-    unchecked = []
-    for i in range(len(USER.username) - 1):
-        if USER.Check[i] == False:
-            unchecked.append(USER.row_id[i])
-            print(USER.row_id[i])
-            return unchecked
 
 
 # TODO: define a function to update rows in Smartsheets
@@ -89,25 +78,24 @@ def update_rows(text, row_id, column_id=8024982304384900):
     updated_row = ss_client.Sheets.update_rows(
         SS_SHEET_ID,
         [new_row])
+    # TODO: define a function to check the checkbox once task is complete
+    def check_box():
+        check_column_id = 2245042581596036  # column 8 (check box column)
+        new_cell = ss_client.models.Cell()
+        new_cell.column_id = check_column_id
+        new_cell.value = True
+        new_cell.strict = False
 
+        # Build the row to update
+        new_row = ss_client.models.Row()
+        new_row.id = row_id
+        new_row.cells.append(new_cell)
 
-# TODO: define a function to check the checkbox once task is complete
-def check_box():
-    check_column_id = 2245042581596036  # column 8 (check box column)
-    new_cell = ss_client.models.Cell()
-    new_cell.column_id = check_column_id
-    new_cell.value = True
-    new_cell.strict = False
-
-    # Build the row to update
-    new_row = ss_client.models.Row()
-    new_row.id = row_id
-    new_row.cells.append(new_cell)
-
-    # Update rows
-    updated_row = ss_client.Sheets.update_rows(
-        SS_SHEET_ID,
-        [new_row])
+        # Update rows
+        updated_row = ss_client.Sheets.update_rows(
+            SS_SHEET_ID,
+            [new_row])
+    check_box()
 
 
 # TODO: define a function that checks the user against the tableau active directory
@@ -178,7 +166,6 @@ def filterG(user_data, all_users, server):
 
 # TODO: use all functions to create a script to add users from Smartsheet to Tablea Server (will use test server for now)
 def main():
-    # TODO: write script to add logs into Logs.txt
     # -------------- setting logging levels (defults as info)
     parser = argparse.ArgumentParser(
         description='Creates Users and adds them to specified groups.')
@@ -193,7 +180,15 @@ def main():
     # set variable to connect to Tableau Server
     tableau_auth = TSC.TableauAuth(TABLEAU_SERVER_USERNAME, TABLEAU_SERVER_PASSWORD)
     server = TSC.Server(
-        'http://uhmc-tableau-t.uhmc.sunysb.edu:8000')  # TODO: ask about the proper ip address to connect to test server
+        'http://uhmc-tableau-t.uhmc.sbuh.stonybrook.edu:8000')  # TODO: ask about the proper ip address to connect to test server
+    print('------------------DEBUG------------------')
+
+    # DEBUG to sign in to test server
+    # with server.auth.sign_in(tableau_auth):
+    #     all_datasources, pagination_item = server.datasources.get()
+    #     print("\nThere are {} datasources on site: ".format(pagination_item.total_available))
+    #     print([datasource.name for datasource in all_datasources])
+
     # server = TSC.Server(TABLEAU_SERVER_ADDRESS)
     user_data = USER
 
@@ -211,7 +206,8 @@ def main():
     # list of usernames in Tableau
     all_users = [au.name for au in TSC.Pager(server.users)]
 
-    filterG(user_data, all_users, server)
+    # filterG(user_data, all_users, server)
+    pass
 
 if __name__ == '__main__':
     main()
