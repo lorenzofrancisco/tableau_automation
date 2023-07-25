@@ -95,7 +95,7 @@ The purpose of this program is to create users, give site roles [Explorer or Exp
 
   - _user_data_ is the User class pulled from Smartsheet Database
 
-  - server is the Tableau Server IP address
+  - _server_ is the Tableau Server IP address
 
   - all_users is the list of users pulled from the active directory of the Tableau Server
 
